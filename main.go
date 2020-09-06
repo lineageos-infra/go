@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/lineageos-infra/mirrorservice/pkg/files"
+	"github.com/lineageos-infra/go/pkg/mirror/files"
 )
 
 func main() {
