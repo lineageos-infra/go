@@ -45,7 +45,7 @@ func initConfig() {
 		viper.AddConfigPath(home)
 		viper.AddConfigPath(".")
 	}
-
+	viper.SetEnvPrefix("lineage")
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err == nil {

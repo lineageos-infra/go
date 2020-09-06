@@ -1,16 +1,22 @@
 package upload
 
 import (
+	"bytes"
+	"encoding/json"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
+	"text/template"
 )
 
 type Upload struct {
-	Path string
+	Path     string
+	Template string
 }
 
 func (u *Upload) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -35,11 +41,44 @@ func (u *Upload) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//write meta to meta/ using config.FileFormat as template
-		log.Printf("%+v", meta)
+		tmpl, err := template.New("").Parse(u.Template)
 
-		fn := fileheader.Filename
+		if err != nil {
+			// error
+		}
 
-		f, err := os.OpenFile(filepath.Join(u.Path, fn), os.O_WRONLY|os.O_CREATE, 0644)
+		buf := &bytes.Buffer{}
+		tmpl.Execute(buf, meta)
+
+		filePath := buf.String()
+		filePath = strings.Replace(filePath, "..", "", -1)
+		path.Clean(filePath)
+
+		finalPath := filepath.Join(u.Path, filePath)
+
+		_, err = os.Stat(finalPath)
+		if os.IsNotExist(err) {
+			err = os.MkdirAll(finalPath, 0755)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		metaContents, err := json.Marshal(meta)
+		log.Println(string(metaContents))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = ioutil.WriteFile(filepath.Join(finalPath, fileheader.Filename+".meta"), metaContents, 0644)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		f, err := os.OpenFile(filepath.Join(finalPath, fileheader.Filename), os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

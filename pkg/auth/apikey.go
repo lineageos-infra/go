@@ -1,6 +1,8 @@
 package auth
 
-import "net/http"
+import (
+	"net/http"
+)
 
 func ApiKey(next http.Handler, keys map[string]bool) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -12,6 +14,7 @@ func ApiKey(next http.Handler, keys map[string]bool) http.Handler {
 		_, ok := keys[key]
 		if !ok {
 			http.Error(w, "invalid api key", http.StatusUnauthorized)
+			return
 		}
 		next.ServeHTTP(w, r)
 	})

@@ -36,7 +36,7 @@ func (u *Files) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// return 500
 	}
 	w.Header().Set("Content-Type", "application/json")
-	d, err := json.Marshal(metadata)
+	d, err := json.MarshalIndent(metadata, "", "    ")
 	if err != nil {
 		// 500
 	}
