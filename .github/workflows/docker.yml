@@ -1,0 +1,11 @@
+name: Docker push
+on:
+  push:
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build & push to ghcr.io
+        run: |
+          echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          docker build . --tag ghcr.io/lineageos-infra/go:$VERSION
+          docker push ghcr.io/lineageos-infra/go:$VERSION
